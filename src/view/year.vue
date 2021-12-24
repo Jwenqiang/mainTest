@@ -491,8 +491,8 @@
 				routerNum: "",
 				showImg: false,
 				showLogin: true,
-				name: "",
-				empNo: "",
+				name: "何伟",
+				empNo: "114951",
 				my: "",
 				goFast: false,
 				goTime: 0,
@@ -651,52 +651,46 @@
 						url: "https://m.sz.centanet.com/partner/weixin/jssdkjsonp?url=" + encodeURIComponent(window.location.href)
 					})
 					.then(res => {
-						const url = window.location.href + `?empName=${this.my.EmpName}&empNo=${this.my.EmpNo}`
-            console.log("🚀 ~ file: year.vue ~ line 655 ~ setShare ~ url", url)
+						const params = new URLSearchParams({ EmpName: this.my.EmpName, EmpNo: this.my.EmpNo })
+						const url = [window.location.href, params.toString()].join(this.$route.path.includes('?') ? '&' : '?')
+
 						let data = JSON.parse(res.data.replace('(', '').replace(')', ''));
 						if (data) {
-							wx.config({
+							window.wx.config({
 								debug: false,
 								appId: data.AppId,
 								timestamp: data.Timestamp,
 								nonceStr: data.NonceStr,
 								signature: data.Signature,
-								jsApiList: ['onMenuShareAppMessage', 'onMenuShareTimeline']
+								jsApiList: ['updateAppMessageShareData', 'updateTimelineShareData']
 							});
 
-							wx.ready(function() {
+							window.wx.ready(function() {
 								console.log('分享', shareObj)
 								//分享好友
-								wx.onMenuShareAppMessage({
+								window.wx.updateAppMessageShareData({
 									title: shareObj.title,
 									desc: shareObj.desc,
 									link: url,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-									},
-									fail: (e) => {
-									}
+									imgUrl: shareObj.imgUrl
 								});
+
 								//分享朋友圈
-						  wx.onMenuShareTimeline({
+						  	window.wx.updateTimelineShareData({
 									title: shareObj.title,
 									desc: shareObj.desc,
 									link: url,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-									},
-									fail: (e) => {
-
-									}
+									imgUrl: shareObj.imgUrl
 								});
 							});
-							wx.error(function(res) {
-								console.log(res)
+
+							window.wx.error(function(res) {
+                console.log("🚀 ~ file: year.vue ~ res", res)
 							});
 						}
 					})
 					.catch(err=>{
-						console.log('[ err ]', err)
+						console.log("🚀 ~ file: year.vue ~ setShare ~ err", err)
 					})
 			},
 
@@ -746,6 +740,7 @@
 						}
 					})
 					.catch(error => {
+						console.log("🚀 ~ file: year.vue ~ line 755 ~ loginGo ~ error", error)
 						this.$toast.text("网络错误，请稍后再试");
 					})
 			},
