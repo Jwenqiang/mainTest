@@ -448,12 +448,11 @@
 		imgUrl: "https://sz.centanet.com/partner/house/shareImg/year1.png",
 	};
 	import Vue from 'vue';
-	// import { load, updateConfig } from './wx'
 	import vueQr from 'vue-qr' //第二种绘制  可以加logo
 	import 'fullpage.js/vendors/scrolloverflow';
 	import VueFullpage from 'vue-fullpage.js';
 	Vue.use(VueFullpage);
-	var timeOutEvent = 0; //定时器 
+	var timeOutEvent = 0; //定时器
 	export default {
 		name: "year",
 		data() {
@@ -509,12 +508,11 @@
 				isHe:false
 			}
 		},
+
 		components: {
 			vueQr
 		},
-		watch: {
 
-		},
 		filters: {
 			twoFixed(n) {
 				let num = n / 10000;
@@ -526,6 +524,7 @@
 				return niki;
 			}
 		},
+
 		created() {
 			this.readyLoad();
 
@@ -538,60 +537,8 @@
 				this.empNo=sessionStorage.getItem('empNo');
 			}
 		},
-		mounted() {
-			var wx = navigator.userAgent.toLowerCase().indexOf('micromessenger') !== -1; //获取判断用的对象
-			if (wx) {
-				//在微信中打开
-				this.setShare();
-				// this.initWeChat();
-			}
-			
-		},
+
 		methods: {
-			async initWeChat() {
-				const shareObj = {
-					title: '保利天汇•一桥汇前海',
-					desc: '【全程免费+专车接送】一桥一港双站3轨道四快线~',
-					link: window.location.href,
-					imgUrl: 'https://sz.centanet.com/partner/house/shareImg/sale-blth.png'
-				}
-
-				// 加载 SDK
-				await load()
-				if (!window.wx) throw new Error('WeChat JSSDK load error.')
-
-				// 更新微信配置
-			 await updateConfig()
-
-				// 注册分享事件
-				window.wx.ready(function() {
-					// 分享好友
-					window.wx.onMenuShareAppMessage({
-						...shareObj,
-						trigger: function() {
-							// 不要尝试在trigger中使用ajax异步请求修改本次分享的内容，因为客户端分享操作是一个同步操作，这时候使用ajax的回包会还没有返回
-							// alert('用户点击发送给朋友');
-						},
-						success: function() {},
-						cancel: function() {},
-						fail: function() {}
-					})
-
-					// 分享朋友圈
-					window.wx.onMenuShareTimeline({
-						...shareObj,
-						success: function(s) {
-							console.log("分享朋友圈", s)
-						},
-						cancel: function() {},
-						fail: function() {}
-					})
-				})
-
-				window.wx.error(res => {
-					window.console.log('wx error', res)
-				})
-			},
 			setBase() {
 				const canvas = document.querySelector('canvas')
 				const ctx = canvas.getContext('2d')
@@ -635,6 +582,7 @@
 					})
 				}
 			},
+
 			// 画海报
 			posterHb() {
 				console.log(this.my.EmpName)
@@ -665,7 +613,7 @@
 				}
 				ctx.fillText(`我全年共走了${this.my.StepNumber*360}步，足以绕深圳${this.my.TurnsNumber}圈`, 131, 768);
 				ctx.fillText(`......`, 131, 794);
-				// 
+				//
 				ctx.font = "38px FZLTCHJW--GB1-0";
 				ctx.fillStyle = "#fff";
 				ctx.fillText(this.my.EmpName, 247, 1043);
@@ -695,15 +643,17 @@
 
 
 			},
+
 			// 微信分享
-			setShare() { //
+			setShare() {
 				this.$axios({
 						method: "get",
-						url: "https://m.sz.centanet.com/partner/weixin/jssdkjsonp?url=" + encodeURIComponent(location.href)
+						url: "https://m.sz.centanet.com/partner/weixin/jssdkjsonp?url=" + encodeURIComponent(window.location.href)
 					})
 					.then(res => {
+						const url = window.location.href + `?empName=${this.my.EmpName}&empNo=${this.my.EmpNo}`
+            console.log("🚀 ~ file: year.vue ~ line 655 ~ setShare ~ url", url)
 						let data = JSON.parse(res.data.replace('(', '').replace(')', ''));
-						console.log(data)
 						if (data) {
 							wx.config({
 								debug: false,
@@ -711,67 +661,32 @@
 								timestamp: data.Timestamp,
 								nonceStr: data.NonceStr,
 								signature: data.Signature,
-								jsApiList: [
-									'onMenuShareTimeline',
-									'onMenuShareAppMessage',
-									'updateAppMessageShareData',
-									'updateTimelineShareData'
-								]
+								jsApiList: ['onMenuShareAppMessage', 'onMenuShareTimeline']
 							});
+
 							wx.ready(function() {
 								console.log('分享', shareObj)
-								wx.onMenuShareTimeline({
-									title: shareObj.title,
-									desc: shareObj.desc,
-									link: location.href,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-										console.log("正确1", s)
-										// 设置成功
-									},
-									fail: (e) => {
-										console.log("错误1", e)
-									}
-								})
+								//分享好友
 								wx.onMenuShareAppMessage({
 									title: shareObj.title,
 									desc: shareObj.desc,
-									link: location.href,
+									link: url,
 									imgUrl: shareObj.imgUrl,
 									success: function(s) {
-										console.log("正确2", s)
-										// 设置成功
 									},
 									fail: (e) => {
-										console.log("错误2", e)
-									}
-								})
-								//分享好友
-								wx.updateAppMessageShareData({
-									title: shareObj.title,
-									desc: shareObj.desc,
-									link: location.href,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-										console.log("正确", s)
-										// 设置成功
-									},
-									fail: (e) => {
-										console.log("错误", e)
 									}
 								});
 								//分享朋友圈
-						  wx.updateTimelineShareData({
+						  wx.onMenuShareTimeline({
 									title: shareObj.title,
 									desc: shareObj.desc,
-									link: location.href,
+									link: url,
 									imgUrl: shareObj.imgUrl,
 									success: function(s) {
-										console.log("正确", s)
-										// 设置成功
 									},
 									fail: (e) => {
-										console.log("错误", e)
+
 									}
 								});
 							});
@@ -780,94 +695,11 @@
 							});
 						}
 					})
-			},
-			// 微信分享带信息
-			setShareMsg() { //
-				this.$axios({
-						method: "get",
-						url: "https://m.sz.centanet.com/partner/weixin/jssdkjsonp?url=" + encodeURIComponent(location.href)
-					})
-					.then(res => {
-						let data = JSON.parse(res.data.replace('(', '').replace(')', ''));
-						console.log(data)
-						if (data) {
-							wx.config({
-								debug: false,
-								appId: data.AppId,
-								timestamp: data.Timestamp,
-								nonceStr: data.NonceStr,
-								signature: data.Signature,
-								jsApiList: [
-									'onMenuShareTimeline',
-									'onMenuShareAppMessage',
-									'updateAppMessageShareData',
-									'updateTimelineShareData'
-								]
-							});
-							wx.ready(function() {
-								console.log('分享1', shareObj)
-								console.log(`传参empName=${this.my.EmpName}&empNo=${this.my.EmpNo}`);
-								wx.onMenuShareTimeline({
-									title: shareObj.title,
-									desc: shareObj.desc,
-									link: location.href+`?empName=${this.my.EmpName}&empNo=${this.my.EmpNo}`,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-										console.log("正确1", s)
-										// 设置成功
-									},
-									fail: (e) => {
-										console.log("错误1", e)
-									}
-								})
-								wx.onMenuShareAppMessage({
-									title: shareObj.title,
-									desc: shareObj.desc,
-									link: location.href+`?empName=${this.my.EmpName}&empNo=${this.my.EmpNo}`,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-										console.log("正确2", s)
-										// 设置成功
-									},
-									fail: (e) => {
-										console.log("错误2", e)
-									}
-								})
-								//分享好友
-								wx.updateAppMessageShareData({
-									title: shareObj.title,
-									desc: shareObj.desc,
-									link: location.href+`?empName=${this.my.EmpName}&empNo=${this.my.EmpNo}`,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-										console.log("正确", s)
-										// 设置成功
-									},
-									fail: (e) => {
-										console.log("错误", e)
-									}
-								});
-								//分享朋友圈
-						  wx.updateTimelineShareData({
-									title: shareObj.title,
-									desc: shareObj.desc,
-									link: location.href+`?empName=${this.my.EmpName}&empNo=${this.my.EmpNo}`,
-									imgUrl: shareObj.imgUrl,
-									success: function(s) {
-										console.log("正确", s)
-										// 设置成功
-									},
-									fail: (e) => {
-										console.log("错误", e)
-									}
-								});
-							});
-							wx.error(function(res) {
-								console.log(res)
-							});
-						}
+					.catch(err=>{
+						console.log('[ err ]', err)
 					})
 			},
+
 			loginGo(gh, name) {
 				if (!gh) {
 					if (this.name == "") {
@@ -907,12 +739,7 @@
 								this.posterHb();
 							}, 5000)
 							var wx = navigator.userAgent.toLowerCase().indexOf('micromessenger') !== -1; //获取判断用的对象
-							if (wx) {
-								//在微信中打开
-								setTimeout(()=>{
-									this.setShareMsg();
-								},1000)
-							}
+							wx && this.setShare();
 						} else {
 							this.showLogin = true;
 							this.$toast.text("只面向三级经纪人同事哟~");
@@ -938,7 +765,7 @@
 							// 图片加载
 							img.onload = () => {
 								console.log('[ 进度 ]', ++loaded, loaded / imgs.length)
-								//全部加载完成 
+								//全部加载完成
 								if (loaded / imgs.length > 0.9) {
 									setTimeout(() => {
 										this.ready = true;
@@ -991,12 +818,12 @@
 			},
 			// 触摸事件开始
 			gtouchstart() {
-				timeOutEvent = setTimeout(this.longPress, 500); //这里设置定时器，定义长按500毫秒触发长按事件，时间可以自己改，个人感觉500毫秒非常合适   
+				timeOutEvent = setTimeout(this.longPress, 500); //这里设置定时器，定义长按500毫秒触发长按事件，时间可以自己改，个人感觉500毫秒非常合适
 				return false;
 			},
-			//手释放，如果在500毫秒内就释放，则取消长按事件，此时可以执行onclick应该执行的事件   
+			//手释放，如果在500毫秒内就释放，则取消长按事件，此时可以执行onclick应该执行的事件
 			gtouchend() {
-				clearTimeout(timeOutEvent); //清除定时器   
+				clearTimeout(timeOutEvent); //清除定时器
 				this.goFast = false;
 				clearInterval(this.timeJS);
 				if (this.goTime > 2) {
@@ -1004,19 +831,19 @@
 				}
 
 				if (timeOutEvent != 0) {
-					//这里写要执行的内容（尤如onclick事件）   
+					//这里写要执行的内容（尤如onclick事件）
 					// alert("你这是点击，不是长按");
 				}
 				return false;
 			},
-			//如果手指有移动，则取消所有事件，此时说明用户只是要移动而不是长按   
+			//如果手指有移动，则取消所有事件，此时说明用户只是要移动而不是长按
 			gtouchmove() {
-				clearTimeout(timeOutEvent); //清除定时器   
+				clearTimeout(timeOutEvent); //清除定时器
 				timeOutEvent = 0;
 
 			},
 
-			//真正长按后应该执行的内容   
+			//真正长按后应该执行的内容
 			longPress() {
 				// alert("长按事件触发发");
 				this.goFast = true;
@@ -1073,7 +900,7 @@
 				var audio = this.$refs.music;
 				// audio.volume = 0.5;
 				if (audio.paused) {
-					audio.play(); // 这个就是播放 
+					audio.play(); // 这个就是播放
 					this.roleM = true;
 				} else {
 					audio.pause(); // 这个就是暂停
@@ -3054,7 +2881,7 @@
 		0% {
 			transform:translateX(-30px)  rotate(15deg);
 		}
-	
+
 		100% {
 			transform:translateX(30px)  rotate(-15deg);
 		}
@@ -3063,7 +2890,7 @@
 		0% {
 			transform:scale(1);
 		}
-			
+
 		100% {
 			transform:scale(1.1);
 		}
